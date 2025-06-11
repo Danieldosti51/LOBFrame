@@ -56,7 +56,6 @@ class CustomLaggedDataset(CustomDataset):
     def get_window_data(self, cache_idx, start_idx):
         lag_idxs = [start_idx]
         lag_idxs.extend([start_idx + lag for lag in self.lags])
-        print(lag_idxs)
         if self.lighten:
             return self.cache_data[cache_idx][lag_idxs, :20]
         return self.cache_data[cache_idx][lag_idxs, :40]
