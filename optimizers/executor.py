@@ -2,7 +2,7 @@ import shutil
 from torch.utils.data import DataLoader
 import torch
 
-from loaders.custom_dataset import CustomDataset
+from loaders.custom_windowed_dataset import CustomWindowedDataset
 from models.DeepLob.deeplob import DeepLOB
 from models.iTransformer.itransformer import ITransformer
 from models.Transformer.transformer import Transformer
@@ -57,7 +57,7 @@ class Executor:
         
         if self.torch_dataset_preparation:
             # Prepare the training dataloader.
-            dataset = CustomDataset(
+            dataset = CustomWindowedDataset(
                 dataset=general_hyperparameters["dataset"],
                 learning_stage="training",
                 window_size=model_hyperparameters["history_length"],
@@ -86,7 +86,7 @@ class Executor:
 
         if self.torch_dataset_preparation:
             # Prepare the validation dataloader.
-            dataset = CustomDataset(
+            dataset = CustomWindowedDataset(
                 dataset=general_hyperparameters["dataset"],
                 learning_stage="validation",
                 window_size=model_hyperparameters["history_length"],
@@ -113,7 +113,7 @@ class Executor:
             )
 
         if self.torch_dataset_preparation is False and self.torch_dataset_preparation_backtest:
-            dataset = CustomDataset(
+            dataset = CustomWindowedDataset(
                 dataset=general_hyperparameters["dataset"],
                 learning_stage="test",
                 window_size=model_hyperparameters["history_length"],
@@ -131,7 +131,7 @@ class Executor:
             )
             torch.save(dataset, f"./torch_datasets/threshold_{model_hyperparameters['threshold']}/batch_size_{model_hyperparameters['batch_size']}/training_{self.training_stocks_string}_test_{self.test_stocks_string}/{model_hyperparameters['prediction_horizon']}/test_dataset_backtest.pt")
         elif self.torch_dataset_preparation and self.torch_dataset_preparation_backtest is False:
-            dataset = CustomDataset(
+            dataset = CustomWindowedDataset(
                 dataset=general_hyperparameters["dataset"],
                 learning_stage="test",
                 window_size=model_hyperparameters["history_length"],
