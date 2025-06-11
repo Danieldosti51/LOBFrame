@@ -32,14 +32,14 @@ class CustomDataset(Dataset, ABC):
     ):
         self.learning_stage = learning_stage
         self.shuffling_seed = shuffling_seed
-        self.balanced_dataloader = balanced_dataloader
+        self.balanced_dataloader = balanced_dataloader # This option is available only for training.
         self.backtest = backtest
         self.targets_type = targets_type
         self.lighten = lighten
         self.threshold = threshold
         self.prediction_horizon = prediction_horizon
         self.all_horizons = all_horizons
-        self.cumulative_lengths = [0]
+        self.cumulative_lengths = [0] # Stores the accumulated length of all processed datasets
 
         # Initialize file paths
         if self.learning_stage == "training":
@@ -50,6 +50,7 @@ class CustomDataset(Dataset, ABC):
             random.seed(self.shuffling_seed)
             random.shuffle(self.csv_files)
         else:
+            # During the validation and testing stages it is fundamental to read the datasets in chronological order.
             if self.learning_stage == 'validation':
                 file_patterns = [f"./data/{dataset}/scaled_data/{self.learning_stage}/{element}_orderbooks*.csv" for element in validation_stocks]
             else:
@@ -101,6 +102,9 @@ class CustomDataset(Dataset, ABC):
                 corresponding_cumulative_length = detect_changing_points(index, self.cumulative_lengths)
                 temp_index = index - corresponding_cumulative_length if corresponding_cumulative_length is not None else index
 
+                # Even having a balanced dataloader, labels would be messed up once computing models' inputs.
+                # Indeed, given an index 'i', the input rows go from 'i' to 'i + max_offset' and the label to be used is the one at 'i + max_offset'.
+                # Therefore, we must subtract the max_offset from the index of each sample.
                 if temp_index >= max_offset:
                     if class_rep in class_groups:
                         class_groups[class_rep].append(index - max_offset)
@@ -108,11 +112,13 @@ class CustomDataset(Dataset, ABC):
                         class_groups[class_rep] = [index - max_offset]
 
             if self.balanced_dataloader:
+                # Determine the desired number of samples per class (pseudo-balanced). We use the size of the less represented class.
                 min_samples_class = min(len(indices) for indices in class_groups.values())
                 if min_samples_class > 5000:
                     min_samples_class = 5000
                 balanced_sample_size = min_samples_class
 
+            # We randomly select indices from each class to create the subsample.
             subsample_indices = []
             for class_rep, indices in class_groups.items():
                 random.seed(self.shuffling_seed)
