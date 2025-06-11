@@ -61,7 +61,7 @@ class CustomWindowedDataset(CustomDataset):
 '''
 if __name__ == "__main__":
     # Create dataset and DataLoader with random shuffling
-    dataset = CustomDataset(
+    dataset = CustomWindowedDataset(
         dataset="nasdaq",
         learning_stage="training",
         window_size=100,
